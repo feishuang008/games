@@ -1,0 +1,178 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>我的贪吃蛇</title>
+<script type="text/javascript"  src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+</head>
+<style>
+    .box {
+        background:#FFF;width: 15px;height: 15px; border:1px solid #000;
+    }
+    .snake {
+        background:#000;
+        width: 15px;
+        height: 15px;
+        border:1px solid white;
+    }
+    .food {
+        background:#0F0;
+        width: 15px;
+        height: 15px;
+        border:1px solid white;
+    }
+    #test {
+    position: absolute;
+    left: 30px;
+    top: 30px;
+    }
+    a{
+        text-decoration:none;
+    }
+    .scoreSnake{
+    position: absolute;
+    left: 821px;
+    top: 89px;
+}
+</style>
+
+<script type="text/javascript">
+    var snake = [];
+    var rows = 20;//行数
+    var cols = 40;//列数
+    var map = [];//地图数组:
+    var obj = [];
+    var direction=0;//蛇的前进方向
+    var prevdirection;//蛇上一步的前进方向
+    var speed = 500;
+    var dt;//定时器
+    var foodx = 0;
+    var foody = 0;
+    var snakex = 0;
+    var snakey = 0;
+    var x = 0;
+    var y = 0;
+    var score = 0;
+
+
+    //初始化map，food，snake
+    $(function(){
+        while(snakex == foodx && snakey == foody){//确保蛇头和食物不出现在同一点上
+            snakex=Math.floor(Math.random()*rows);
+            snakey=Math.floor(Math.random()*cols);
+            foodx=Math.floor(Math.random()*rows);
+            foody=Math.floor(Math.random()*cols);
+        }
+        for(var i = 0 ;i < rows;i++){
+            map[i] = new Array();
+            snake[i] = new Array();
+            for(var j=0; j<cols; j++){
+                snake[i][j] = 0;
+                map[i][j] = 0;
+            }
+        }
+        snake[snakex][snakey] = 1;
+        initializationMap();
+    });
+
+    function food(){
+        while(map[foodx][foody]!=0 && snake[foodx][foody]!=0){
+            foodx=Math.floor(Math.random()*rows);
+            foody=Math.floor(Math.random()*cols);
+        }
+    }
+
+    function move(){
+        obj.unshift(snakex+'.'+snakey);
+        switch(direction){
+            case 37: snakey--;prevdirection = 37;break;
+            case 38: snakex--;prevdirection = 38;break;
+            case 39: snakey++;prevdirection = 39;break;
+            case 40: snakex++;prevdirection = 40;break;
+        }
+        if(snakex<0||snakex>=rows||snakey<0||snakey>=cols||snake[snakex][snakey]==1){//snake 死亡条件
+            clearInterval(dt);
+            alert('game over!score:'+score+'分');
+            return false;
+        }
+        snake[snakex][snakey] = 1;
+        if(foodx==snakex&&foody==snakey){//snake eat food
+            score += 10;
+            $('#score').text(score);
+            food();
+            if(score%100==0&&speed>=100){//提速
+                speed -= 50;
+            }
+        }else{
+            var str = obj.pop();
+            x = str.split(".")[0];
+            y = str.split(".")[1];
+            snake[x][y] = 0;//snake.pop();//最后一个元素出栈
+        }
+        initializationMap();
+        clearInterval(dt);
+        dt = setInterval("move()", speed);
+    }
+
+    //初始化map,food,snake
+    function initializationMap(){
+        //snake[snakex*cols+snakey] = 1;//1代表snake
+        map[snakex][snakey] = 1;
+        map[foodx][foody] = 2;
+        for(var i = 0 ;i < rows;i++){
+            for(var j = 0 ;j < cols;j++){
+                if(snake[i][j]!=0){//该点是snake
+                    map[i][j] = '<span class="snake" >&nbsp;&nbsp;</span>';
+                }else if(map[i][j] == 2){
+                    map[i][j] = '<span class="food" >&nbsp;&nbsp;</span>';
+                }else{
+                    map[i][j] = '<span class="box" >&nbsp;&nbsp;</span>';
+                }
+            }
+        }
+        drawCanvas();
+    }
+
+    //绘制map，food，snake
+    function drawCanvas(){
+        $('#test').text('');
+        for(var i = 0 ;i < rows;i++){
+            for(var j = 0 ;j < cols;j++){
+                $('#test').append(map[i][j]);
+            }
+            $('#test').append('<br/>');
+        }
+    }
+
+    window.document.onkeydown=function(e){//获取键盘码
+        var ev=e || window.event;
+        direction = ev.keyCode;
+
+        if(direction > 40 || direction < 37){
+            direction = prevdirection;
+        }
+        if(prevdirection == 37 && direction == 39){//如果方向是左，则向右无效
+            direction = 37;
+        }
+        if(prevdirection == 38 && direction == 40){//如果方向是上，则向下无效
+            direction = 38;
+        }
+        if(prevdirection == 39 && direction == 37){//如果方向是右，则向左无效
+            direction = 39;
+        }
+        if(prevdirection == 40 && direction == 38){//如果方向是下，则向上无效
+            direction = 40;
+        }
+        move();
+    }
+
+
+</script>
+
+<body>
+    <div id="test">
+    </div>
+    <div class="scoreSnake"><span id="score" style="color:red;left:">0</span> <span>分</span></div>
+    <div style="position: absolute; left: 818px; top: 170px; height: 80px; width: 115px;">请通过键盘  上   下   左   右   四个键开始游戏</div>
+</body>
+</html>
